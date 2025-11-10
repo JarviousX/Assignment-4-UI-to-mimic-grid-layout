@@ -5,6 +5,10 @@ import {Animated, Platform} from 'react-native';
 import HomeScreen from './src/screens/HomeScreen';
 import DetailScreen from './src/screens/DetailScreen';
 
+/**
+ * Type definitions for navigation parameters
+ * Defines the structure of data passed between screens
+ */
 export type RootStackParamList = {
   Home: undefined;
   Detail: {title: string; message: string};
@@ -12,10 +16,18 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Cyber night city theme color palette
 const NEON_BLUE = '#00BFFF';
 const NEON_PURPLE = '#9D4EDD';
 
-// Helper to interpolate colors
+/**
+ * Interpolates between two hex colors based on a ratio (0-1)
+ * Used to create smooth color transitions for animations
+ * @param color1 - Starting color in hex format (#RRGGBB)
+ * @param color2 - Ending color in hex format (#RRGGBB)
+ * @param ratio - Interpolation ratio (0 = color1, 1 = color2)
+ * @returns Interpolated color in hex format
+ */
 const interpolateColor = (color1: string, color2: string, ratio: number) => {
   const hex1 = color1.replace('#', '');
   const hex2 = color2.replace('#', '');
@@ -35,18 +47,26 @@ const interpolateColor = (color1: string, color2: string, ratio: number) => {
   return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
 };
 
+/**
+ * Main App Component
+ * Sets up navigation and animates header colors with neon blue-purple gradient
+ */
 const App = () => {
+  // Animation value that cycles from 0 to 1 for color interpolation
   const animatedValue = useRef(new Animated.Value(0)).current;
+  // State for header border and text colors (animated)
   const [headerBorderColor, setHeaderBorderColor] = React.useState(NEON_BLUE);
   const [headerTintColor, setHeaderTintColor] = React.useState(NEON_BLUE);
 
+  // Animate header colors continuously between neon blue and purple
   useEffect(() => {
+    // Create a looping animation that goes from 0 to 1 and back to 0
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(animatedValue, {
           toValue: 1,
           duration: 2000,
-          useNativeDriver: false,
+          useNativeDriver: false, // Can't use native driver for color animations
         }),
         Animated.timing(animatedValue, {
           toValue: 0,
@@ -56,6 +76,7 @@ const App = () => {
       ]),
     );
 
+    // Listen to animation value changes and update header colors
     const listener = animatedValue.addListener(({value}) => {
       const color = interpolateColor(NEON_BLUE, NEON_PURPLE, value);
       setHeaderBorderColor(color);
@@ -64,6 +85,7 @@ const App = () => {
 
     animation.start();
 
+    // Cleanup: stop animation and remove listener on unmount
     return () => {
       animation.stop();
       animatedValue.removeListener(listener);
@@ -75,28 +97,29 @@ const App = () => {
       theme={{
         dark: true,
         colors: {
-          primary: headerTintColor,
-          background: '#0A0A0F',
-          card: '#0A0A0F',
-          text: '#E0E0E0',
-          border: headerBorderColor,
-          notification: '#00BFFF',
+          primary: headerTintColor, // Animated neon color for primary elements
+          background: '#0A0A0F', // Dark background matching cyber theme
+          card: '#0A0A0F', // Screen background color
+          text: '#E0E0E0', // Light text for readability
+          border: headerBorderColor, // Animated border color
+          notification: '#00BFFF', // Notification accent color
         },
       }}>
       <Stack.Navigator
         screenOptions={{
+          // Header styling with dark cyber theme
           headerStyle: {
             backgroundColor: '#0A0A0F',
           } as any,
-          headerTintColor: headerTintColor,
+          headerTintColor: headerTintColor, // Animated neon color for header text/buttons
           headerTitleStyle: {
             fontSize: 28,
             fontWeight: 'bold',
-            color: headerTintColor,
+            color: headerTintColor, // Large animated title
           } as any,
-          headerShadowVisible: false,
+          headerShadowVisible: false, // Remove default shadow
           contentStyle: {
-            backgroundColor: '#0A0A0F',
+            backgroundColor: '#0A0A0F', // Dark background for all screens
           },
         }}>
         <Stack.Screen

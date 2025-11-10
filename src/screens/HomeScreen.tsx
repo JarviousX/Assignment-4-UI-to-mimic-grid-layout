@@ -22,10 +22,17 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+// Cyber night city theme colors
 const NEON_BLUE = '#00BFFF';
 const NEON_PURPLE = '#9D4EDD';
 
-// Helper to interpolate colors
+/**
+ * Interpolates between two hex colors for smooth transitions
+ * @param color1 - Starting color (#RRGGBB)
+ * @param color2 - Ending color (#RRGGBB)
+ * @param ratio - Interpolation value between 0 and 1
+ * @returns Interpolated hex color string
+ */
 const interpolateColor = (color1: string, color2: string, ratio: number) => {
   const hex1 = color1.replace('#', '');
   const hex2 = color2.replace('#', '');
@@ -45,14 +52,25 @@ const interpolateColor = (color1: string, color2: string, ratio: number) => {
   return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
 };
 
+/**
+ * Home Screen Component
+ * Main screen displaying app shortcuts in rows or grid layout
+ * Features animated toggle buttons and layout switching
+ */
 const HomeScreen = () => {
+  // Current layout mode: 'rows' or 'grid'
   const [layoutMode, setLayoutMode] = useState<'rows' | 'grid'>('rows');
   const navigation = useNavigation<NavigationProp>();
+  
+  // Animation value for toggle button colors
   const animatedValue = useRef(new Animated.Value(0)).current;
+  // Animated colors for toggle container border and active button
   const [borderColor, setBorderColor] = React.useState(NEON_BLUE);
   const [shadowColor, setShadowColor] = React.useState(NEON_BLUE);
 
+  // Animate toggle button colors continuously
   useEffect(() => {
+    // Loop animation: 0 -> 1 -> 0
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(animatedValue, {
@@ -68,6 +86,7 @@ const HomeScreen = () => {
       ]),
     );
 
+    // Update colors based on animation value
     const listener = animatedValue.addListener(({value}) => {
       const color = interpolateColor(NEON_BLUE, NEON_PURPLE, value);
       setBorderColor(color);
@@ -82,6 +101,10 @@ const HomeScreen = () => {
     };
   }, [animatedValue]);
 
+  /**
+   * Handles navigation to detail screen when an app shortcut is pressed
+   * @param item - The app item that was clicked
+   */
   const handleItemPress = (item: typeof appData[0]) => {
     navigation.navigate('Detail', {
       title: item.name,
@@ -89,6 +112,7 @@ const HomeScreen = () => {
     });
   };
 
+  // Calculate status bar height for Android (iOS handled by SafeAreaView)
   const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   return (
@@ -99,51 +123,57 @@ const HomeScreen = () => {
         translucent={false}
       />
       <SafeAreaView style={styles.safeArea}>
+        {/* Layout toggle buttons with animated border */}
         <View style={[styles.toggleContainer, {borderBottomColor: borderColor, shadowColor}]}>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            layoutMode === 'rows' && {
-              backgroundColor: borderColor,
-              borderColor: borderColor,
-              shadowColor: shadowColor,
-            },
-          ]}
-          onPress={() => setLayoutMode('rows')}>
-          <Text
+          {/* Rows layout button */}
+          <TouchableOpacity
             style={[
-              styles.toggleText,
-              layoutMode === 'rows' && styles.toggleTextActive,
-            ]}>
-            Rows
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            layoutMode === 'grid' && {
-              backgroundColor: borderColor,
-              borderColor: borderColor,
-              shadowColor: shadowColor,
-            },
-          ]}
-          onPress={() => setLayoutMode('grid')}>
-          <Text
+              styles.toggleButton,
+              // Apply animated colors when this button is active
+              layoutMode === 'rows' && {
+                backgroundColor: borderColor,
+                borderColor: borderColor,
+                shadowColor: shadowColor,
+              },
+            ]}
+            onPress={() => setLayoutMode('rows')}>
+            <Text
+              style={[
+                styles.toggleText,
+                layoutMode === 'rows' && styles.toggleTextActive,
+              ]}>
+              Rows
+            </Text>
+          </TouchableOpacity>
+          {/* Grid layout button */}
+          <TouchableOpacity
             style={[
-              styles.toggleText,
-              layoutMode === 'grid' && styles.toggleTextActive,
-            ]}>
-            Grid
-          </Text>
-        </TouchableOpacity>
-      </View>
+              styles.toggleButton,
+              // Apply animated colors when this button is active
+              layoutMode === 'grid' && {
+                backgroundColor: borderColor,
+                borderColor: borderColor,
+                shadowColor: shadowColor,
+              },
+            ]}
+            onPress={() => setLayoutMode('grid')}>
+            <Text
+              style={[
+                styles.toggleText,
+                layoutMode === 'grid' && styles.toggleTextActive,
+              ]}>
+              Grid
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.content}>
-        {layoutMode === 'rows' ? (
-          <RowsLayout data={appData} onItemPress={handleItemPress} />
-        ) : (
-          <GridLayout data={appData} onItemPress={handleItemPress} />
-        )}
+        {/* Content area: switches between RowsLayout and GridLayout */}
+        <View style={styles.content}>
+          {layoutMode === 'rows' ? (
+            <RowsLayout data={appData} onItemPress={handleItemPress} />
+          ) : (
+            <GridLayout data={appData} onItemPress={handleItemPress} />
+          )}
         </View>
       </SafeAreaView>
     </View>
